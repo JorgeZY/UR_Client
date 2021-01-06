@@ -18,15 +18,16 @@ from client_interface import client_interface
 class Functionality(Ui_MainWindow):
 
     def __init__(self, MainWindow):
+        super().__init__()
         self.setupUi(MainWindow)
         self.connect_slot()
         self.server_validator()
         self.PoseButton.setEnabled(False)
 
     def start_tcp_client(self):
-        self.connectButton.setDisabled(True)
 
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        # self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
         # self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         # self.sock.setblocking(False)
         try:
@@ -37,15 +38,21 @@ class Functionality(Ui_MainWindow):
             self.SendText.setPlainText("连接失败，请检查端口号与IP地址！")
             self.connectButton.setDisabled(False)
             print(Exception)
-
         else:
-            self.sock.connect((ipText, portValue))
-            client_th = threading.Thread(target=self.tcp_concurrency)
-            # position_th = threading.Thread(target=self.get_pose_data)
-            client_th.start()
-            # position_th.start()
-            print('连接成功！')
-            self.PoseButton.setEnabled(True)
+            try:
+                self.sock.settimeout(1)
+                # test = self.sock.gettimeout()
+                self.sock.connect((ipText, portValue))
+                self.connectButton.setDisabled(True)
+                # client_th = threading.Thread(target=self.tcp_concurrency)
+                # position_th = threading.Thread(target=self.get_pose_data)
+                # client_th.start()
+                # position_th.start()
+                print('连接成功！')
+                self.PoseButton.setEnabled(True)
+            except:
+                print("连接失败，请检查端口号与IP地址！")
+                self.SendText.setPlainText("连接失败，请检查端口号与IP地址！")
 
     def get_pose_data(self):
         # while True:
@@ -197,7 +204,7 @@ if __name__ == '__main__':
     QApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
     app = QApplication(sys.argv)
     app.setStyle('WindowsXP')
-    mainWindow = QMainWindow()
+    mainWindow = Ui_MainWindow()
     ui = Functionality(mainWindow)
     mainWindow.show()
     sys.exit(app.exec())
